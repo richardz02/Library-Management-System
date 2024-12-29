@@ -18,6 +18,10 @@ class Book_Management_System {
 
         // Loop up if a book exists, user can search by id or title
         std::vector<Book> lookup_book(std::string input);
+
+        // Display all books stored in the library
+        // Use the quicksort algorithm to sort in ascending order
+        void display_all_ascending();
 };
 
 
