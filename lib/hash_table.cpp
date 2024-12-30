@@ -1,11 +1,11 @@
 #include "../inc/hash_table.hpp"
+#include <stdexcept>
 #include <stdio.h>
 
 // Constructor
 // Set size of array and initialize Linked_List pointer array to null pointers
-Hash_Table::Hash_Table(int size) {
-    this->numBook = 0;
-    this->array_size = size;
+Hash_Table::Hash_Table() {
+    this->numBooks = 0;
     this->array = new Linked_List*[array_size]();
 }
 
@@ -13,6 +13,16 @@ Hash_Table::Hash_Table(int size) {
 // Delete Linked_List pointer array and free up memory
 Hash_Table::~Hash_Table() {
     delete[] array;
+}
+
+// Return the table size
+int Hash_Table::get_size() {
+    return array_size;
+}
+
+// Return the number of books stored in the hash table
+int Hash_Table::get_numBooks() {
+    return numBooks;
 }
 
 // Hash function
@@ -23,7 +33,7 @@ int Hash_Table::hash_function(int book_id) {
 
 // Calculate the load factor
 float Hash_Table::calculate_load_factor() {
-    float load_factor = (float)numBook / (float)array_size;
+    float load_factor = (float)numBooks / (float)array_size;
     return load_factor;
 }
 
@@ -75,7 +85,7 @@ void Hash_Table::add_book(Book book) {
     array[bucket_index]->add_node(book);
 
     // Increment number of books by 1
-    numBook++;
+    numBooks++;
 
     // Calculate load factor
     float load_factor = calculate_load_factor();
@@ -89,17 +99,42 @@ void Hash_Table::add_book(Book book) {
     }
 }
 
-// Search for a book in the library
-Node* Hash_Table::search_book(int book_id) {
+// Return the book node
+std::optional<Book> Hash_Table::search_by_id(int book_id) {
     // Get the bucket index of the book
     int bucket_index = hash_function(book_id);
 
     // If the bucket index is nullptr, return nullptr
     if (array[bucket_index] == nullptr)
-        return nullptr;
+        return std::nullopt;
 
-    Node* book = array[bucket_index]->get_book(book_id);
-    return book;
+    Node* current = array[bucket_index]->head;
+    while (current != nullptr) {
+        if (current->book.get_id() == book_id) {
+            return current->book;
+            break;
+        }
+    }
+
+    return std::nullopt;
+}
+
+std::vector<Book> Hash_Table::search_by_title(std::string book_title) {
+    std::vector<Book> books;
+
+    for (int i = 0; i < array_size; i++) {
+        if (array[i] != nullptr) {
+            Node* current = array[i]->head;
+            while (current != nullptr) {
+                if (current->book.get_title() == book_title) {
+                    books.push_back(current->book);
+                }
+                current = current->next;
+            }
+        }
+    }
+
+    return books;
 }
 
 // Delete book from hash table
@@ -113,7 +148,7 @@ void Hash_Table::delete_book(int book_id) {
 
     array[bucket_index]->delete_node(book_id);
 
-    numBook--;
+    numBooks--;
 }
 
 void Hash_Table::display() {
@@ -124,4 +159,20 @@ void Hash_Table::display() {
             std::cout << "----------------------------------" << std::endl;
         }
     }
+}
+
+std::vector<Book> Hash_Table::return_booklist() {
+    std::vector<Book> books;
+
+    for (int i = 0; i < array_size; i++) {
+        if (array[i] != nullptr) {
+            Node* current = array[i]->head;
+            while (current != nullptr) {
+                books.push_back(current->book);
+                current = current->next;
+            }
+        }
+    }
+
+    return books;
 }

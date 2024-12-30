@@ -8,7 +8,7 @@ class Book_Management_System {
     Hash_Table ht;
 
     public:
-        Book_Management_System(int ht_size);
+        Book_Management_System();
 
         // Add book to library
         void add_book(Book book);

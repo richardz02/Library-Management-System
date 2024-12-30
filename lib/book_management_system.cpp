@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../inc/book_management_system.hpp"
 
-Book_Management_System::Book_Management_System(int ht_size) : ht(ht_size) {}
+Book_Management_System::Book_Management_System() : ht() {}
 
 
 void Book_Management_System::add_book(Book book) {
