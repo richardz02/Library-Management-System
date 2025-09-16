@@ -1,27 +1,14 @@
-#include <iostream>
-#include "../inc/book_management_system.hpp"
+#include "library.hpp"
 
-#ifndef CLI_HPP
-#define CLI_HPP
+#ifndef CLI_H_
+#define CLI_H_
 
 class CLI {
-    Book_Management_System bms;
+public:
+    Library library;
 
-    // Displays a menu for the user to choose from
-    void display_menu();
-
-    // Adds book to library
-    void add_book();
-
-    // Deletes a book from library
-    void delete_book();
-
-    // Searches a book either by id or by title
-    void search_book();
-
-    public:
-        // To run the cli application
-        void run();
+    void run();
 };
 
-#endif // CLI_HPP
+
+#endif // CLI_H_
