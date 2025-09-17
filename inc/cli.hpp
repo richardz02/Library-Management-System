@@ -4,10 +4,10 @@
 #define CLI_H_
 
 class CLI {
-public:
     Library library;
-
-    void run();
+public:
+        CLI(const std::string& connection_info) : library(connection_info) {}
+        void run();
 };
 
 

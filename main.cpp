@@ -1,10 +1,14 @@
+#include <exception>
 #include <iostream>
 #include <optional>
 #include <vector>
 #include "inc/library.hpp"
 #include "inc/cli.hpp"
 
+#include <pqxx/pqxx>
+
 int main() {
-    CLI cli;
+    const std::string connection_info = "dbname=library_db user=bigrich host=localhost port=5432";
+    CLI cli(connection_info);
     cli.run();
 }

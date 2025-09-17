@@ -1,6 +1,4 @@
 #include <iostream>
-#include <uuid/uuid.h>
-
 #include "date.hpp"
 
 #ifndef BOOK_H_

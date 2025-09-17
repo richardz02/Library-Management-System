@@ -1,25 +1,22 @@
 #include <iostream>
 #include <string>
 #include <optional>
-#include <unordered_map>
+#include <pqxx/pqxx>
 #include "book.hpp"
 
 #ifndef LIBRARY_H_
 #define LIBRARY_H_
 
 class Library {
-private:
-        // Use a map to store the (isbn : title) key value pairs for now
-        std::unordered_map<std::string, std::string> map;
+    pqxx::connection conn;
 
 public:
-        Library() {}
+        // Initialize a connection to the database in the constructor
+        Library(const std::string& connection_info) : conn(connection_info) {}
 
-        void add_book(std::string isbn, std::string title, std::string author, std::string publication_date);
-
+        void add_book(const Book& book);
+        void search_by_isbn(std::string isbn);
         void delete_book(std::string isbn);
-
-        std::optional<std::string> search_by_isbn(std::string isbn);
 };
 
 

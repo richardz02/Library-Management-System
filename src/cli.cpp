@@ -1,6 +1,4 @@
-#include <ostream>
 #include <string>
-#include <sstream>
 #include <vector>
 #include "../inc/cli.hpp"
 #include "../inc/library.hpp"
@@ -9,10 +7,10 @@ void CLI::run() {
     while (1) {
         std::cout << "Library> " << std::flush;
 
-        std::string usr_command;
-        std::getline(std::cin, usr_command);
+        std::string usr_command; // String to store user command
+        std::getline(std::cin, usr_command); // Read user command from standard input
 
-        // Parse user command
+        // Split the user command string into tokens for further parsing
         std::string current_token;
         std::vector<std::string> tokens;
         bool inside_quotes = false;
@@ -55,18 +53,23 @@ void CLI::run() {
             exit(0);
         }
         else if (tokens[0] == "add-book") {
-            std::cout << tokens.size() << std::endl;
+            // Check if the command has the correct size
             if (tokens.size() != 5) {
                 std::cout << "Invalid command." << std::endl;
                 continue;
             }
 
+            // Parse the add-book command to get the parameters
             std::string isbn = tokens[1];
             std::string title = tokens[2];
             std::string author = tokens[3];
             std::string publication_date = tokens[4];
 
-            library.add_book(isbn, title, author, publication_date);
+            // Creating a Book object
+            Book book{isbn, title, author, publication_date};
+
+            // Pass in the book object to the library function call add_book
+            library.add_book(book);
         }
         else if (tokens[0] == "search-book") {
             if (tokens.size() != 2) {
@@ -75,10 +78,7 @@ void CLI::run() {
             }
 
             std::string isbn = tokens[1];
-            std::optional<std::string> result = library.search_by_isbn(isbn);
-            if (result.has_value()) {
-                std::cout << result.value() << std::endl;
-            }
+            library.search_by_isbn(isbn);
         }
         else if (tokens[0] == "remove-book") {
             if (tokens.size() != 2) {
