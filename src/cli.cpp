@@ -46,7 +46,8 @@ void CLI::run() {
             std::cout << "1. Add a book: add-book <ISBN> <Title> <Author> <Publication Date>" << std::endl;
             std::cout << "2. Search by ISBN: search-book <ISBN>" << std::endl;
             std::cout << "3. Remove a book: remove-book <ISBN>" << std::endl;
-            std::cout << "4. Exit program: exit" << std::endl;
+            std::cout << "4. Display all books: display-all" << std::endl;
+            std::cout << "5. Exit program: exit" << std::endl;
         }
         // If user enters "exit", exit program
         else if (tokens[0] == "exit") {
@@ -88,6 +89,14 @@ void CLI::run() {
 
             std::string isbn = tokens[1];
             library.delete_book(isbn);
+        }
+        else if (tokens[0] == "display-all") {
+            if (tokens.size() != 1) {
+                std::cout << "Invalid command." << std::endl;
+                continue;
+            }
+
+            library.display_all();
         }
         else {
             std::cout << "Invalid command. Type \"help\" to see the help menu." << std::endl;

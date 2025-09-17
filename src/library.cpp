@@ -1,5 +1,7 @@
-#include "../inc/library.hpp"
 #include <exception>
+#include <iomanip>
+#include <ios>
+#include "../inc/library.hpp"
 
 // Adding a book to the library
 void Library::add_book(const Book& book) {
@@ -62,6 +64,45 @@ void Library::delete_book(std::string isbn) {
 
         tx.exec("DELETE FROM books WHERE isbn = " + tx.quote(isbn));
         tx.commit();
+    } catch (const pqxx::sql_error &e) {
+        // Catch SQL execution errors, and print out query and caused the error
+        std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;
+    } catch (const std::exception &e) {
+        // Catch any unexpected errors
+        std::cerr << "Unexpected error: " << e.what() << std::endl;
+    }
+}
+
+// Display all books in the library
+void Library::display_all() {
+    try {
+        pqxx::work tx(conn);
+
+        pqxx::result r = tx.exec("SELECT * FROM books");
+
+        if (r.empty()) {
+            std::cout << "Library is empty." << std::endl;
+            return;
+        } else {
+            // Print header
+            std::cout << std::left
+                << std::setw(15) << "ISBN"
+                << std::setw(25) << "Title"
+                << std::setw(25) << "Author"
+                << std::setw(12) << "Pub. Date"
+                << "\n";
+            std::cout << std::string(80, '-') << "\n";
+
+            // Iterate through all the records returned and display them
+            for (auto row : r) {
+                std::cout << std::left
+                    << std::setw(15) << row["isbn"].as<std::string>()
+                    << std::setw(25) << row["title"].as<std::string>()
+                    << std::setw(25) << row["author"].as<std::string>()
+                    << std::setw(12) << row["publication_date"].as<std::string>()
+                    << "\n";
+            }
+        }
     } catch (const pqxx::sql_error &e) {
         // Catch SQL execution errors, and print out query and caused the error
         std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;

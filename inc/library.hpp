@@ -17,6 +17,7 @@ public:
         void add_book(const Book& book);
         void search_by_isbn(std::string isbn);
         void delete_book(std::string isbn);
+        void display_all();
 };
 
 
