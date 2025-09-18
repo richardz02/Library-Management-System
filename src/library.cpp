@@ -3,6 +3,12 @@
 #include <ios>
 #include "../inc/library.hpp"
 
+/**
+ * =============================
+ *      Book Operations
+ * =============================
+ */
+
 // Adding a book to the library
 void Library::add_book(const Book& book) {
     try {
@@ -74,9 +80,9 @@ void Library::delete_book(std::string isbn) {
 }
 
 // Display all books in the library
-void Library::display_all() {
+void Library::display_all_books() {
     try {
-        pqxx::work tx(conn);
+        pqxx::read_transaction tx(conn);
 
         pqxx::result r = tx.exec("SELECT * FROM books");
 
@@ -102,6 +108,115 @@ void Library::display_all() {
                     << std::setw(12) << row["publication_date"].as<std::string>()
                     << "\n";
             }
+        }
+    } catch (const pqxx::sql_error &e) {
+        // Catch SQL execution errors, and print out query and caused the error
+        std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;
+    } catch (const std::exception &e) {
+        // Catch any unexpected errors
+        std::cerr << "Unexpected error: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * =========================
+ *       Copy Operations
+ * =========================
+ */
+
+// Insert a new copy of a book into the library
+void Library::insert_copy(const std::string &isbn, int available_copies) {
+    try {
+        pqxx::work tx(conn);
+
+        pqxx::params p;
+        p.append(isbn);
+
+        for (int i = 0; i < available_copies; i++) {
+            tx.exec("INSERT INTO copies (isbn) VALUES ($1)", p);
+        }
+        tx.commit();
+    } catch (const pqxx::sql_error &e) {
+        // Catch SQL execution errors, and print out query and caused the error
+        std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;
+    } catch (const std::exception &e) {
+        // Catch any unexpected errors
+        std::cerr << "Unexpected error: " << e.what() << std::endl;
+    }
+}
+
+// Update the status of a copy
+void Library::update_copy(int copy_id, const std::string &new_status) {
+    try {
+        pqxx::work tx(conn);
+
+        pqxx::params p;
+        p.append(new_status);
+        p.append(copy_id);
+
+        tx.exec("UPDATE copies SET status = $1 WHERE copy_id = $2", p);
+        tx.commit();
+    } catch (const pqxx::sql_error &e) {
+        // Catch SQL execution errors, and print out query and caused the error
+        std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;
+    } catch (const std::exception &e) {
+        // Catch any unexpected errors
+        std::cerr << "Unexpected error: " << e.what() << std::endl;
+    }
+}
+
+// Remove a copy of a book
+void Library::remove_copy(int copy_id) {
+    try {
+        pqxx::work tx(conn);
+
+        pqxx::params p;
+        p.append(copy_id);
+
+        tx.exec("DELETE FROM copies WHERE copy_id = $1", p);
+        tx.commit();
+    } catch (const pqxx::sql_error &e) {
+        // Catch SQL execution errors, and print out query and caused the error
+        std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;
+    } catch (const std::exception &e) {
+        // Catch any unexpected errors
+        std::cerr << "Unexpected error: " << e.what() << std::endl;
+    }
+
+}
+
+void Library::display_all_copies() {
+    try {
+        pqxx::read_transaction tx(conn);
+
+        pqxx::result r = tx.exec("SELECT books.isbn, title, author, publication_date, copy_id, status FROM books INNER JOIN copies on books.isbn = copies.isbn");
+
+        if (r.empty()) {
+            std::cout << "No copies exist.\n";
+            return;
+        }
+
+        // Print header
+        std::cout << std::left
+            << std::setw(15) << "ISBN"
+            << std::setw(25) << "Title"
+            << std::setw(25) << "Author"
+            << std::setw(12) << "Pub. Date"
+            << std::setw(10) << "Copy ID"
+            << std::setw(15) << "Status"
+            << "\n";
+        std::cout << std::string(100, '-') << "\n";
+
+        // Iterate through all the records returned and display them
+        for (auto row : r) {
+            std::cout << std::left
+                << std::setw(15) << row["isbn"].as<std::string>()
+                << std::setw(25) << row["title"].as<std::string>()
+                << std::setw(25) << row["author"].as<std::string>()
+                << std::setw(12) << row["publication_date"].as<std::string>()
+                << std::setw(10) << row["copy_id"].as<std::string>()
+                << std::setw(15) << row["status"].as<std::string>()
+                << "\n";
         }
     } catch (const pqxx::sql_error &e) {
         // Catch SQL execution errors, and print out query and caused the error
