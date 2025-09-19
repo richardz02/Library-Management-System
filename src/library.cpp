@@ -1,16 +1,28 @@
 #include <exception>
 #include <iomanip>
 #include <ios>
+#include <string>
+#include <vector>
 #include "../inc/library.hpp"
 
-/**
- * =============================
- *      Book Operations
- * =============================
- */
+void Library::add_book(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (args.size() != 4) {
+        std::cout << "Invalid command.\n";
+        std::cout << "Usage: add-book <ISBN> <Title> <Author> <Publication Date>\n";
+        return;
+    }
 
-// Adding a book to the library
-void Library::add_book(const Book& book) {
+    // Get the fields from the args vector
+    std::string isbn = args[0];
+    std::string title = args[1];
+    std::string author = args[2];
+    std::string publication_date = args[3];
+
+    // Create the book object with provided args
+    Book book{isbn, title, author, publication_date};
+
+    // Insert the book into the database
     try {
         pqxx::work tx(conn);
 
@@ -33,8 +45,17 @@ void Library::add_book(const Book& book) {
     }
 }
 
-// Search book by isbn, return book title
-void Library::search_by_isbn(std::string isbn) {
+void Library::search_by_isbn(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (args.size() != 1) {
+        std::cout << "Invalid command.\n";
+        std::cout << "Usage: search-book <ISBN>\n";
+        return;
+    }
+
+    // Get ISBN from args vector
+    std::string isbn = args[0];
+
     try {
         pqxx::work tx(conn);
 
@@ -60,8 +81,17 @@ void Library::search_by_isbn(std::string isbn) {
     }
 }
 
-// Deleting a book from the library
-void Library::delete_book(std::string isbn) {
+void Library::delete_book(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (args.size() != 1) {
+        std::cout << "Invalid command.\n";
+        std::cout << "Usage: delete-book <ISBN>\n";
+        return;
+    }
+
+    // Get the ISBN from the args vector
+    std::string isbn = args[0];
+
     try {
         pqxx::work tx(conn);
 
@@ -79,8 +109,13 @@ void Library::delete_book(std::string isbn) {
     }
 }
 
-// Display all books in the library
-void Library::display_all_books() {
+void Library::display_all_books(const std::vector<std::string>& args) {
+    if (!args.empty()) {
+        std::cout << "Invalid command.\n";
+        std::cout << "list-books does not expect any arguments";
+    }
+
+
     try {
         pqxx::read_transaction tx(conn);
 
@@ -118,14 +153,17 @@ void Library::display_all_books() {
     }
 }
 
-/**
- * =========================
- *       Copy Operations
- * =========================
- */
+void Library::insert_copy(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (args.size() != 2) {
+        std::cout << "Invalid command.\n";
+        std::cout << "Usage: insert-copy <ISBN> <Number of Copies>\n";
+        return;
+    }
 
-// Insert a new copy of a book into the library
-void Library::insert_copy(const std::string &isbn, int available_copies) {
+    std::string isbn = args[0];
+    int available_copies = std::stoi(args[1]);
+
     try {
         pqxx::work tx(conn);
 
@@ -145,8 +183,21 @@ void Library::insert_copy(const std::string &isbn, int available_copies) {
     }
 }
 
-// Update the status of a copy
-void Library::update_copy(int copy_id, const std::string &new_status) {
+void Library::update_copy(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (args.size() != 2) {
+        std::cout << "Invalid command.\n";
+        std::cout << "Usage: update-copy <Copy ID> <New Status>\n";
+        return;
+    }
+
+    int copy_id = std::stoi(args[0]);
+    std::string new_status = args[1];
+    if (new_status != "available" && new_status != "checked-out" && new_status != "lost" && new_status != "damaged") {
+        std::cout << "Invalid status. Status options are: available, checked-out, lost, damaged.\n";
+        return;
+    }
+
     try {
         pqxx::work tx(conn);
 
@@ -165,8 +216,16 @@ void Library::update_copy(int copy_id, const std::string &new_status) {
     }
 }
 
-// Remove a copy of a book
-void Library::remove_copy(int copy_id) {
+void Library::remove_copy(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (args.size() != 1) {
+        std::cout << "Invalid command.\n";
+        std::cout << "Usage: remove-copy <Copy ID>\n";
+        return;
+    }
+
+    int copy_id = std::stoi(args[0]);
+
     try {
         pqxx::work tx(conn);
 
@@ -185,7 +244,14 @@ void Library::remove_copy(int copy_id) {
 
 }
 
-void Library::display_all_copies() {
+void Library::display_all_copies(const std::vector<std::string>& args) {
+    // Validate inputs
+    if (!args.empty()) {
+        std::cout << "Invalid command.\n";
+        std::cout << "list-copies does not expect any arguments.\n";
+        return;
+    }
+
     try {
         pqxx::read_transaction tx(conn);
 
@@ -225,4 +291,56 @@ void Library::display_all_copies() {
         // Catch any unexpected errors
         std::cerr << "Unexpected error: " << e.what() << std::endl;
     }
+}
+
+void Library::help(const std::vector<std::string> &args) {
+    // Validate inputs
+    if (!args.empty()) {
+        std::cout << "Invalid command.\n";
+        std::cout << "This command does not expect any arguments.\n";
+        return;
+    }
+
+    int width = 50; // Width for the command column
+
+    std::cout << "Library Management System - Help Menu" << std::endl;
+    std::cout << "-------------------------------------" << std::endl << std::endl;
+
+    std::cout << "Book operations:" << std::endl;
+    std::cout << "  " << std::setw(width) << std::left << "add-book <isbn> <title> <author> <pub_date>"
+         << "Add a new book to the catalog" << std::endl;
+    std::cout << "  " << std::setw(width) << "search-book <isbn>"
+         << "Search for a book by ISBN" << std::endl;
+    std::cout << "  " << std::setw(width) << "delete-book <isbn>"
+         << "Delete a book from the catalog" << std::endl;
+    std::cout << "  " << std::setw(width) << "list-books"
+         << "Display all books in the catalog" << std::endl << std::endl;
+
+    std::cout << "Copy operations:" << std::endl;
+    std::cout << "  " << std::setw(width) << "insert-copy <isbn> <count>"
+         << "Add one or more copies" << std::endl;
+    std::cout << "  " << std::setw(width) << "update-copy <copy_id> <status>"
+         << "Update the status of a copy" << std::endl;
+    std::cout << "  " << std::setw(width) << "remove-copy <copy_id>"
+         << "Remove a copy from the system" << std::endl;
+    std::cout << "  " << std::setw(width) << "list-copies"
+         << "Display all copies" << std::endl << std::endl;
+
+    std::cout << "Other operations:" << std::endl;
+    std::cout << "  " << std::setw(width) << "help"
+         << "Show this help menu" << std::endl;
+    std::cout << "  " << std::setw(width) << "exit"
+         << "Exit the program" << std::endl;
+};
+
+void Library::exit_program(const std::vector<std::string> &args) {
+    // Validate inputs
+    if (!args.empty()) {
+        std::cout << "Invalid command.\n";
+        std::cout << "This command does not expect any arguments.\n";
+        return;
+    }
+
+    // Exit program
+    exit(0);
 }
