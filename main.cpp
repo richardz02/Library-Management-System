@@ -9,6 +9,7 @@
 
 int main() {
     const std::string connection_info = "dbname=library_db user=bigrich host=localhost port=5432";
-    CLI cli(connection_info);
+    pqxx::connection conn(connection_info);
+    CLI cli(conn);
     cli.run();
 }

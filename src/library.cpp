@@ -9,7 +9,7 @@ void Library::add_book(const std::vector<std::string>& args) {
     // Validate inputs
     if (args.size() != 4) {
         std::cout << "Invalid command.\n";
-        std::cout << "Usage: add-book <ISBN> <Title> <Author> <Publication Date>\n";
+        std::cout << "Usage: add-book <isbn> <title> <author> <pub. date>\n";
         return;
     }
 
@@ -19,18 +19,15 @@ void Library::add_book(const std::vector<std::string>& args) {
     std::string author = args[2];
     std::string publication_date = args[3];
 
-    // Create the book object with provided args
-    Book book{isbn, title, author, publication_date};
-
     // Insert the book into the database
     try {
-        pqxx::work tx(conn);
+        pqxx::work tx(conn_);
 
         pqxx::params p;
-        p.append(book.isbn);
-        p.append(book.title);
-        p.append(book.author);
-        p.append(book.publication_date);
+        p.append(isbn);
+        p.append(title);
+        p.append(author);
+        p.append(publication_date);
 
         tx.exec(
             "INSERT INTO books (isbn, title, author, publication_date) VALUES ($1, $2, $3, $4)", p
@@ -49,7 +46,7 @@ void Library::search_by_isbn(const std::vector<std::string>& args) {
     // Validate inputs
     if (args.size() != 1) {
         std::cout << "Invalid command.\n";
-        std::cout << "Usage: search-book <ISBN>\n";
+        std::cout << "Usage: search-book <isbn>\n";
         return;
     }
 
@@ -57,7 +54,7 @@ void Library::search_by_isbn(const std::vector<std::string>& args) {
     std::string isbn = args[0];
 
     try {
-        pqxx::work tx(conn);
+        pqxx::work tx(conn_);
 
         pqxx::params p;
         p.append(isbn);
@@ -75,6 +72,9 @@ void Library::search_by_isbn(const std::vector<std::string>& args) {
             std::cout << "Author: " << row["author"].as<std::string>() << std::endl;
             std::cout << "Publication Date: " << row["publication_date"].as<std::string>() << std::endl;
         }
+    } catch (const pqxx::sql_error &e) {
+        // Catch SQL execution errors, and print out query and caused the error
+        std::cerr << "SQL error: " << e.what() << "\nQuerry: " << e.query() << std::endl;
     } catch (const std::exception &e) {
         // Catch any unexpected errors
         std::cerr << "Unexpected error: " << e.what() << std::endl;
@@ -85,7 +85,7 @@ void Library::delete_book(const std::vector<std::string>& args) {
     // Validate inputs
     if (args.size() != 1) {
         std::cout << "Invalid command.\n";
-        std::cout << "Usage: delete-book <ISBN>\n";
+        std::cout << "Usage: delete-book <isbn>\n";
         return;
     }
 
@@ -93,7 +93,7 @@ void Library::delete_book(const std::vector<std::string>& args) {
     std::string isbn = args[0];
 
     try {
-        pqxx::work tx(conn);
+        pqxx::work tx(conn_);
 
         pqxx::params p;
         p.append(isbn);
@@ -109,7 +109,7 @@ void Library::delete_book(const std::vector<std::string>& args) {
     }
 }
 
-void Library::display_all_books(const std::vector<std::string>& args) {
+void Library::list_all_books(const std::vector<std::string>& args) {
     if (!args.empty()) {
         std::cout << "Invalid command.\n";
         std::cout << "list-books does not expect any arguments";
@@ -117,7 +117,7 @@ void Library::display_all_books(const std::vector<std::string>& args) {
 
 
     try {
-        pqxx::read_transaction tx(conn);
+        pqxx::read_transaction tx(conn_);
 
         pqxx::result r = tx.exec("SELECT * FROM books");
 
@@ -157,7 +157,7 @@ void Library::insert_copy(const std::vector<std::string>& args) {
     // Validate inputs
     if (args.size() != 2) {
         std::cout << "Invalid command.\n";
-        std::cout << "Usage: insert-copy <ISBN> <Number of Copies>\n";
+        std::cout << "Usage: insert-copy <isbn> <count>\n";
         return;
     }
 
@@ -165,7 +165,7 @@ void Library::insert_copy(const std::vector<std::string>& args) {
     int available_copies = std::stoi(args[1]);
 
     try {
-        pqxx::work tx(conn);
+        pqxx::work tx(conn_);
 
         pqxx::params p;
         p.append(isbn);
@@ -187,7 +187,7 @@ void Library::update_copy(const std::vector<std::string>& args) {
     // Validate inputs
     if (args.size() != 2) {
         std::cout << "Invalid command.\n";
-        std::cout << "Usage: update-copy <Copy ID> <New Status>\n";
+        std::cout << "Usage: update-copy <copy_id> <status>\n";
         return;
     }
 
@@ -199,7 +199,7 @@ void Library::update_copy(const std::vector<std::string>& args) {
     }
 
     try {
-        pqxx::work tx(conn);
+        pqxx::work tx(conn_);
 
         pqxx::params p;
         p.append(new_status);
@@ -220,14 +220,14 @@ void Library::remove_copy(const std::vector<std::string>& args) {
     // Validate inputs
     if (args.size() != 1) {
         std::cout << "Invalid command.\n";
-        std::cout << "Usage: remove-copy <Copy ID>\n";
+        std::cout << "Usage: remove-copy <copy_id>\n";
         return;
     }
 
     int copy_id = std::stoi(args[0]);
 
     try {
-        pqxx::work tx(conn);
+        pqxx::work tx(conn_);
 
         pqxx::params p;
         p.append(copy_id);
@@ -244,7 +244,7 @@ void Library::remove_copy(const std::vector<std::string>& args) {
 
 }
 
-void Library::display_all_copies(const std::vector<std::string>& args) {
+void Library::list_all_copies(const std::vector<std::string>& args) {
     // Validate inputs
     if (!args.empty()) {
         std::cout << "Invalid command.\n";
@@ -253,7 +253,7 @@ void Library::display_all_copies(const std::vector<std::string>& args) {
     }
 
     try {
-        pqxx::read_transaction tx(conn);
+        pqxx::read_transaction tx(conn_);
 
         pqxx::result r = tx.exec("SELECT books.isbn, title, author, publication_date, copy_id, status FROM books INNER JOIN copies on books.isbn = copies.isbn");
 
@@ -325,6 +325,16 @@ void Library::help(const std::vector<std::string> &args) {
          << "Remove a copy from the system" << std::endl;
     std::cout << "  " << std::setw(width) << "list-copies"
          << "Display all copies" << std::endl << std::endl;
+
+    std::cout << "User operations:" << std::endl;
+    std::cout << "  " << std::setw(width) << "add-user <first name> <last name> <email>"
+         << "Add new user" << std::endl;
+    std::cout << "  " << std::setw(width) << "search-user <user_id>"
+         << "Search for a user by user id" << std::endl;
+    std::cout << "  " << std::setw(width) << "delete-user <user_id>"
+         << "Remove a user from the system" << std::endl;
+    std::cout << "  " << std::setw(width) << "list-users"
+         << "Display all users" << std::endl << std::endl;
 
     std::cout << "Other operations:" << std::endl;
     std::cout << "  " << std::setw(width) << "help"

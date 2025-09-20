@@ -9,11 +9,11 @@
 
 class Library {
 private:
-        pqxx::connection conn;
+        pqxx::connection& conn_;
 
 public:
         // Initialize a connection to the database in the constructor
-        Library(const std::string& connection_info) : conn(connection_info) {}
+        Library(pqxx::connection& conn) : conn_(conn) {}
 
         /* ---------------Book operations---------------- */
 
@@ -55,7 +55,7 @@ public:
          *
          * This function displays all books and their metadata stored in the library, does not expect args
          */
-        void display_all_books(const std::vector<std::string>& args);
+        void list_all_books(const std::vector<std::string>& args);
 
         /* ------------Copy Operations------------------ */
 
@@ -96,7 +96,7 @@ public:
          *
          * This function prints all copies of books in the library, does not expect args
          */
-        void display_all_copies(const std::vector<std::string>& args);
+        void list_all_copies(const std::vector<std::string>& args);
 
         // Other operations
         void help(const std::vector<std::string>& args);

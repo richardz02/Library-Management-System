@@ -2,20 +2,27 @@
 #include <vector>
 #include "../inc/cli.hpp"
 #include "../inc/library.hpp"
+#include "../inc/user_management.hpp"
 
 // CLI constructor
-CLI::CLI(const std::string& connection_info) : library(connection_info) {
+CLI::CLI(pqxx::connection& conn) : library(conn), user_management(conn) {
     // Book Operations
     dispatch_table["add-book"] = [&](const std::vector<std::string>& args){ library.add_book(args); };
     dispatch_table["search-book"] = [&](const std::vector<std::string>& args){ library.search_by_isbn(args); };
     dispatch_table["delete-book"] = [&](const std::vector<std::string> & args){ library.delete_book(args); };
-    dispatch_table["list-books"] = [&](const std::vector<std::string>& args){ library.display_all_books(args); };
+    dispatch_table["list-books"] = [&](const std::vector<std::string>& args){ library.list_all_books(args); };
 
     // Copy Operations
     dispatch_table["insert-copy"] = [&](const std::vector<std::string>& args){ library.insert_copy(args); };
     dispatch_table["update-copy"] = [&](const std::vector<std::string>& args){ library.update_copy(args); };
     dispatch_table["remove-copy"] = [&](const std::vector<std::string>& args){ library.remove_copy(args); };
-    dispatch_table["list-copies"] = [&](const std::vector<std::string>& args){ library.display_all_copies(args); };
+    dispatch_table["list-copies"] = [&](const std::vector<std::string>& args){ library.list_all_copies(args); };
+
+    // User Operations
+    dispatch_table["add-user"] = [&](const std::vector<std::string>& args){ user_management.add_user(args); };
+    dispatch_table["search-user"] = [&](const std::vector<std::string>& args){ user_management.search_user(args); };
+    dispatch_table["delete-user"] = [&](const std::vector<std::string>& args){ user_management.delete_user(args); };
+    dispatch_table["list-users"] = [&](const std::vector<std::string>& args){ user_management.list_users(args); };
 
     // Other
     dispatch_table["help"] = [&](const std::vector<std::string>& args){ library.help(args); };
