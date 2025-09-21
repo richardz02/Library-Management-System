@@ -3,9 +3,10 @@
 #include "../inc/cli.hpp"
 #include "../inc/library.hpp"
 #include "../inc/user_management.hpp"
+#include "../inc/service.hpp"
 
 // CLI constructor
-CLI::CLI(pqxx::connection& conn) : library(conn), user_management(conn) {
+CLI::CLI(pqxx::connection& conn) : library(conn), user_management(conn), service(conn) {
     // Book Operations
     dispatch_table["add-book"] = [&](const std::vector<std::string>& args){ library.add_book(args); };
     dispatch_table["search-book"] = [&](const std::vector<std::string>& args){ library.search_by_isbn(args); };
@@ -23,6 +24,12 @@ CLI::CLI(pqxx::connection& conn) : library(conn), user_management(conn) {
     dispatch_table["search-user"] = [&](const std::vector<std::string>& args){ user_management.search_user(args); };
     dispatch_table["delete-user"] = [&](const std::vector<std::string>& args){ user_management.delete_user(args); };
     dispatch_table["list-users"] = [&](const std::vector<std::string>& args){ user_management.list_users(args); };
+
+    // Services
+    dispatch_table["checkout"] = [&](const std::vector<std::string>& args){ service.checkout(args); };
+    dispatch_table["returning"] = [&](const std::vector<std::string>& args){ service.checkin(args); };
+    dispatch_table["view-borrow"] = [&](const std::vector<std::string>& args){ service.view_borrow(args); };
+    dispatch_table["view-all-borrow"] = [&](const std::vector<std::string>& args){ service.view_all(args); };
 
     // Other
     dispatch_table["help"] = [&](const std::vector<std::string>& args){ library.help(args); };
@@ -69,11 +76,10 @@ void CLI::run() {
         // Extract the command from the first token
         std::string command = tokens[0];
 
-        // Rest of the tokens in the vector are arguments
-        tokens.erase(tokens.begin());
-
         auto it = dispatch_table.find(command);
         if (it != dispatch_table.end()) {
+            // Rest of the tokens in the vector are arguments
+            tokens.erase(tokens.begin());
             it->second(tokens);
         } else {
             std::cout << "Unknow command. Enter \"help\" to see the help menu.\n";

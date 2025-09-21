@@ -13,6 +13,7 @@ set(SOURCE_FILES
   src/cli.cpp
   src/library.cpp
   src/user_management.cpp
+  src/service.cpp
 )
 
 include_directories(/usr/local/include)

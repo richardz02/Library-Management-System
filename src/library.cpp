@@ -13,16 +13,24 @@ void Library::add_book(const std::vector<std::string>& args) {
         return;
     }
 
-    // Get the fields from the args vector
+    // Extract isbn, title, author, and pub date from args
     std::string isbn = args[0];
     std::string title = args[1];
     std::string author = args[2];
     std::string publication_date = args[3];
 
-    // Insert the book into the database
     try {
         pqxx::work tx(conn_);
 
+        /**
+         * Insert new book into the library catalog
+         *
+         * books table has the following fields:
+         * - isbn: uniquely identify each book
+         * - title
+         * - author
+         * - publication date
+         */
         pqxx::params p;
         p.append(isbn);
         p.append(title);
@@ -50,7 +58,7 @@ void Library::search_by_isbn(const std::vector<std::string>& args) {
         return;
     }
 
-    // Get ISBN from args vector
+    // Extract isbn from args
     std::string isbn = args[0];
 
     try {
@@ -89,7 +97,7 @@ void Library::delete_book(const std::vector<std::string>& args) {
         return;
     }
 
-    // Get the ISBN from the args vector
+    // Extract isbn from args
     std::string isbn = args[0];
 
     try {
@@ -161,12 +169,21 @@ void Library::insert_copy(const std::vector<std::string>& args) {
         return;
     }
 
+    // Extract isbn and number of available copies from args
     std::string isbn = args[0];
     int available_copies = std::stoi(args[1]);
 
     try {
         pqxx::work tx(conn_);
 
+        /**
+         * Insert a number of copies of a book into the library
+         *
+         * copies table has the following fields:
+         * - copy_id: automatically set by postgres, uniquely identify each copy
+         * - isbn: foreign key reference to books table
+         * - status: available, checked-out, damaged, lost
+         */
         pqxx::params p;
         p.append(isbn);
 
@@ -191,8 +208,12 @@ void Library::update_copy(const std::vector<std::string>& args) {
         return;
     }
 
+    // Extract copy id and new status from args
     int copy_id = std::stoi(args[0]);
     std::string new_status = args[1];
+
+    // Before updating the status of a copy, check the status is one of the following:
+    // available, checked-out, damaged, lost
     if (new_status != "available" && new_status != "checked-out" && new_status != "lost" && new_status != "damaged") {
         std::cout << "Invalid status. Status options are: available, checked-out, lost, damaged.\n";
         return;
@@ -201,6 +222,7 @@ void Library::update_copy(const std::vector<std::string>& args) {
     try {
         pqxx::work tx(conn_);
 
+        // Update the status of a copy
         pqxx::params p;
         p.append(new_status);
         p.append(copy_id);
@@ -224,11 +246,13 @@ void Library::remove_copy(const std::vector<std::string>& args) {
         return;
     }
 
+    // Extract copy id from args
     int copy_id = std::stoi(args[0]);
 
     try {
         pqxx::work tx(conn_);
 
+        // Remove a specific copy from the library
         pqxx::params p;
         p.append(copy_id);
 
@@ -241,7 +265,6 @@ void Library::remove_copy(const std::vector<std::string>& args) {
         // Catch any unexpected errors
         std::cerr << "Unexpected error: " << e.what() << std::endl;
     }
-
 }
 
 void Library::list_all_copies(const std::vector<std::string>& args) {
@@ -335,6 +358,16 @@ void Library::help(const std::vector<std::string> &args) {
          << "Remove a user from the system" << std::endl;
     std::cout << "  " << std::setw(width) << "list-users"
          << "Display all users" << std::endl << std::endl;
+
+    std::cout << "Services:" << std::endl;
+    std::cout << "  " << std::setw(width) << "checkout <copy_id> <user_id>"
+         << "Allows user to check out a copy of a book" << std::endl;
+    std::cout << "  " << std::setw(width) << "returning <copy_id> <user_id> <status>"
+         << "Allows user to return a book with updated status of copy" << std::endl;
+    std::cout << "  " << std::setw(width) << "view-borrow"
+         << "Returns all active borrowing records" << std::endl;
+    std::cout << "  " << std::setw(width) << "view-all-borrow"
+         << "Returns entire list of borrowing records" << std::endl << std::endl;
 
     std::cout << "Other operations:" << std::endl;
     std::cout << "  " << std::setw(width) << "help"
